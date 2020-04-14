@@ -70,7 +70,12 @@ def str2bool(v):
 
 if __name__=="__main__":
     USE_CUDA = True
+
+    #default
     WEIGHT_CHOICE = 2
+
+    #for Photo to Photo transfer, as suggested in original paper
+    WEIGHT_CHOICE = 4
 
     # setting parameters
     config = dict()
@@ -86,6 +91,10 @@ if __name__=="__main__":
         config['weights'] = [1.0, 0.8, 0.7, 0.6, 0.1, 0.0]
     elif WEIGHT_CHOICE == 3:
         config['weights'] = [1.0, 0.9, 0.8, 0.7, 0.2, 0.0]
+    elif WEIGHT_CHOICE == 4:
+        config['weights'] = [3.0, 3.0, 3.0, 3.0, 3.0, 3.0]
+
+
     config['sizes'] = [3,3,3,5,5,3]
     config['rangee'] = [32,6,6,4,4,2]
 
