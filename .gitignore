@@ -141,6 +141,6 @@ dataset/
 results/
 toy_dataset/
 
-wls/Gammas_lab/
-wls/LambdaVsAlpha/
-wls/LambdaVsAlpha_lab/
+wls/Gammas_lab/*
+wls/LambdaVsAlpha/*
+wls/LambdaVsAlpha_lab/*
