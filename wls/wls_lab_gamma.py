@@ -33,6 +33,9 @@ from scipy.sparse.linalg import spsolve
 LAMBDA = 0.8
 ALPHA = 1.0
 
+#for Gamma correction
+GAMMA = 2.2
+
 # values used in WLS paper
 # LAMBDA = 1.0
 # ALPHA = 1.2
@@ -42,6 +45,18 @@ def replaceZeroes(data):
   data[data == 0] = min_nonzero
   return data
 
+
+def gamma_corr(img, gamma=1.0):
+    #normalize to [0,1]
+    img_norm = np.asarray(img, dtype=np.float32) / 255.0
+
+    #apply gamma corr
+    img_gamma = np.power(img_norm, gamma)
+
+    # convert back to [0,255]
+    img_u8 = np.asarray(img_gamma * 255, dtype=np.uint8)
+
+    return img_u8
 
 
 def weightedLeastSquare(img_color, img_guide=None, _lambda=1.0 , alpha=1.2):
@@ -63,7 +78,6 @@ def weightedLeastSquare(img_color, img_guide=None, _lambda=1.0 , alpha=1.2):
         dy = dy.flatten()
 
         dx = np.diff(L_img, 1, 1)
-
         dx = -_lambda / (np.abs(dx) ** alpha + smallNum)
         dx = np.pad(dx, ((0 ,0),(0,1)),mode='constant')
         dx = dx.flatten()
@@ -92,47 +106,63 @@ def weightedLeastSquare(img_color, img_guide=None, _lambda=1.0 , alpha=1.2):
         return OUT
 
 
-    output[:,:,0] = wlsFilter( img_color[:, :, 0], L_img=img_guide[:, :, 0], _lambda=_lambda, alpha=alpha)
-    output[:,:,1] = wlsFilter( img_color[:, :, 1], L_img=img_guide[:, :, 1], _lambda=_lambda, alpha=alpha)
-    output[:,:,2] = wlsFilter( img_color[:, :, 2], L_img=img_guide[:, :, 2], _lambda=_lambda, alpha=alpha)
+    # output[:,:,0] = wlsFilter( img_color[:, :, 0], L_img=img_guide[:, :, 0], _lambda=_lambda, alpha=alpha)
+    # output[:,:,1] = wlsFilter( img_color[:, :, 1], L_img=img_guide[:, :, 1], _lambda=_lambda, alpha=alpha)
+    # output[:,:,2] = wlsFilter( img_color[:, :, 2], L_img=img_guide[:, :, 2], _lambda=_lambda, alpha=alpha)
+
+    output = wlsFilter(img_color, L_img=img_guide, _lambda=_lambda, alpha=alpha)
+
     return output
 
 
+
+
 if __name__ == '__main__':
-    imgA = cv2.imread("src-0028.png")
-    imgAP = cv2.imread("img_B-ref-0028-src-0028.png")
+    imgA_gray = cv2.imread("src-0028.png", cv2.IMREAD_GRAYSCALE)
+    imgAP_bgr = cv2.imread("img_B-ref-0028-src-0028.png")
 
-    imgA = cv2.resize(imgA , dsize=imgAP.shape[:2] ,  interpolation=cv2.INTER_CUBIC)
+    #perform inverse gamma operation
+    imgA_gray = gamma_corr(imgA_gray, gamma=1/GAMMA)
+    imgAP_bgr = gamma_corr(imgAP_bgr, gamma=1/GAMMA)
 
-    imgA = np.asarray(imgA, dtype=np.float32)
-    imgA = imgA / 255
-    imgA = replaceZeroes(imgA)
-    imgAP = np.asarray(imgAP, dtype=np.float32)
-    imgAP = imgAP / 255
-    imgAP = replaceZeroes(imgAP)
+    imgAP_lab = cv2.cvtColor(imgAP_bgr, cv2.COLOR_BGR2LAB)
+    imgAP_l = imgAP_lab[:, :, 0]
+    imgAP_a = imgAP_lab[:, :, 1]
+    imgAP_b = imgAP_lab[:, :, 2]
+
+    # if imgA.shape != imgAP.shape:
+    #     imgA = cv2.resize(imgA , dsize=imgAP.shape[:2] ,  interpolation=cv2.INTER_CUBIC)
+
+    imgA_gray = np.asarray(imgA_gray, dtype=np.float32)
+    imgA_gray = imgA_gray / 255
+    imgA_gray = replaceZeroes(imgA_gray)
+
+    imgAP_l = np.asarray(imgAP_l, dtype=np.float32)
+    imgAP_l = imgAP_l / 255
+    imgAP_l = replaceZeroes(imgAP_l)
 
 
     print("WLS 1")
-    filtered_AB = weightedLeastSquare(imgAP, imgA, alpha =ALPHA, _lambda = LAMBDA)
+    wls_AP_A = weightedLeastSquare(imgAP_l, imgA_gray, alpha =ALPHA, _lambda = LAMBDA)
 
     print("WLS 2")
-    filtered_A = weightedLeastSquare(imgA, imgA, alpha =ALPHA, _lambda = LAMBDA)
+    wls_A_A = weightedLeastSquare(imgA_gray, imgA_gray, alpha =ALPHA, _lambda = LAMBDA)
 
-    refine_AB = imgA + filtered_AB - filtered_A
+    imgOut_lP = imgA_gray + wls_AP_A - wls_A_A
 
-    refine_AB = cv2.normalize(src=refine_AB, dst = refine_AB, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)
-    refine_AB = np.asarray(refine_AB, dtype=np.uint8)
+    imgOut_lP = cv2.normalize(src=imgOut_lP, dst = imgOut_lP, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)
+    imgOut_lP = np.asarray(imgOut_lP, dtype=np.uint8)
 
-    cv2.imwrite("wlsOut_lamb-{}_alph-{}.png".format(LAMBDA, ALPHA), refine_AB)
+    imgOut_lP_a_b = np.zeros_like(imgAP_lab)
+    imgOut_lP_a_b[:, :, 0] = imgOut_lP
+    imgOut_lP_a_b[:, :, 1] = imgAP_a
+    imgOut_lP_a_b[:, :, 2] = imgAP_b
+
+    imgOut_lP_a_b = cv2.cvtColor(imgOut_lP_a_b, cv2.COLOR_LAB2BGR)
+
+    #apply gamma at the end
+    imgOut_lP_a_b = gamma_corr(imgOut_lP_a_b, gamma=GAMMA)
+
+    cv2.imwrite("wlsOut_lab_gamma.png".format(LAMBDA, ALPHA), imgOut_lP_a_b)
 
     print("Image saved.")
-
-
-    ### Save Filtered_AB
-    filtered_AB = cv2.normalize(src=filtered_AB, dst=filtered_AB, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)
-    filtered_AB = np.asarray(filtered_AB, dtype=np.uint8)
-    cv2.imwrite("filtered_AB.png", filtered_AB)
-    ### Save Filtered A
-    filtered_A = cv2.normalize(src=filtered_A, dst=filtered_A, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)
-    filtered_A = np.asarray(filtered_A, dtype=np.uint8)
-    cv2.imwrite("filtered_A.png", filtered_A)
