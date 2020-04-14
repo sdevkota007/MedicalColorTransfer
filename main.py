@@ -3,6 +3,7 @@ from utils import load_image
 import argparse
 from DeepAnalogy import analogy
 import cv2
+import numpy as np
 
 def str2bool(v):
     return v.lower() in ('true')
@@ -104,12 +105,12 @@ if __name__=="__main__":
 
 
     images_A_path = "toy_dataset/radiological/mri"
-    images_AP_path = "toy_dataset/head-no-bg"
+    images_BP_path = "toy_dataset/head-no-bg"
 
     for img_A_name in os.listdir(images_A_path):
         img_A_path = os.path.join(images_A_path, img_A_name)
-        img_BP_name = "src-"+img_A_name.split("-")[1]
-        img_BP_path = os.path.join(images_AP_path, img_BP_name)
+        img_BP_name = "ref-"+img_A_name.split("-")[1]
+        img_BP_path = os.path.join(images_BP_path, img_BP_name)
 
         # img_A_path = 'toy_dataset/radiological/mri/src-0020.png'
         # img_BP_path = 'toy_dataset/head-no-bg/ref-0020.png'
@@ -128,18 +129,28 @@ if __name__=="__main__":
         print("##### Deep Image Analogy - end | Elapse:"+elapse+" #####")
 
 
-        save_path = 'results/toy_expr'
+        # save result
+        content = os.listdir('results')
+        count = 1
+        for c in content:
+            if os.path.isdir('results/'+c):
+                count += 1
+        save_path = 'results/expr_{}'.format(count)
+        save_path_AP = os.path.join(save_path, "AP")
+        save_path_B = os.path.join(save_path, "B")
 
-        if not os.path.exists(save_path):
-            os.makedirs(save_path)
+        os.makedirs(save_path)
+        os.makedirs(save_path_AP)
+        os.makedirs(save_path_B)
 
         img_AP_name = "img_AP-{0}-{1}.png".format( img_A_name.split(".")[0],
                                                    img_BP_name.split(".")[0] )
         img_B_name = "img_B-{0}-{1}.png".format( img_A_name.split(".")[0],
                                                  img_BP_name.split(".")[0] )
 
-        cv2.imwrite( os.path.join(save_path, img_AP_name), img_AP)
-        cv2.imwrite( os.path.join(save_path, img_B_name), img_B)
+        cv2.imwrite( os.path.join(save_path_AP, img_AP_name), img_AP)
+        cv2.imwrite( os.path.join(save_path_B, img_B_name), img_B)
+
         print('Image saved!')
     
     
