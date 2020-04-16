@@ -37,7 +37,9 @@ def analogy(img_A, img_BP, config):
     data_B = copy.deepcopy(data_BP)
     print("Features extracted!")
 
-    n_layers = len(params['layers'])  # usually 5 layers
+    # usually 5 layers
+    n_layers = len(params['layers'])
+
 
     for curr_layer in range(n_layers):
         print("\n### current stage: %d - start ###"%(5-curr_layer))

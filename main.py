@@ -5,15 +5,16 @@ from DeepAnalogy import analogy
 import cv2
 import numpy as np
 import json
+import re
 
 def str2bool(v):
     return v.lower() in ('true')
 
 
 def dumpConfig(content, path):
-    json.dumps(content, indent=4)
+    output = json.dumps(content, indent=4)
     with open(os.path.join(path, "config.json"), 'w') as f:
-        f.write(content)
+        f.write(output)
 
 
 def main():
@@ -28,12 +29,13 @@ def main():
     config = dict()
 
     params = {
-        'layers': [29, 20, 11, 6, 1],
         # default
-        # 'iter': 10,
+        'layers': [29, 20, 11, 6, 1],
+        'iter': 10,
 
-        # mod
-        'iter': 1,
+        # # mod
+        # 'layers': [29],
+        # 'iter': 1,
     }
     config['params'] = params
 
@@ -93,8 +95,10 @@ def main():
         cv2.imwrite(os.path.join(save_path_B, img_B_name), img_B)
 
         print('Image saved!')
-        dumpConfig(config, save_path)
-        print("Config dumped")
+
+
+    dumpConfig(config, save_path)
+    print("Config dumped")
 
 
 if __name__=="__main__":
