@@ -66,7 +66,7 @@ def main():
     images_BP_path = "toy_dataset/head-no-bg"
 
     # target_images = os.listdir(images_A_path)
-    target_images = ['toy_dataset/radiological/mri/src-0028.png']
+    target_images = ['src-0028.png']
 
     for img_A_name in target_images:
         img_A_path = os.path.join(images_A_path, img_A_name)
