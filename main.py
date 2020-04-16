@@ -29,8 +29,11 @@ def main():
 
     params = {
         'layers': [29, 20, 11, 6, 1],
-        'iter': 10,
-        # 'iter': 1,
+        # default
+        # 'iter': 10,
+
+        # mod
+        'iter': 1,
     }
     config['params'] = params
 
