@@ -131,7 +131,7 @@ if __name__ == '__main__':
     imgOut_lP = imgA_gray + wls_AP_A - wls_A_A
 
 
-    # ## substraction of filtered_A from wls_AP_A
+    # ## substraction of wls_A_A from wls_AP_A
     # diff_AP_A = wls_AP_A - wls_A_A
     # ### Save Filtered_AB-A
     # diff_AP_A = cv2.normalize(src=diff_AP_A, dst=diff_AP_A, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)

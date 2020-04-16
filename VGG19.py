@@ -10,6 +10,7 @@ import torch.nn as nn
 import torch.utils.model_zoo as model_zoo
 from lbfgs import lbfgs
 import copy
+from config.settings import USE_CUDA
 
 
 class FeatureExtractor(nn.Sequential):
@@ -122,12 +123,19 @@ class VGG19:
                     print(layer)
                 l = copy.deepcopy(layer)
                 for p in l.parameters():
-                    p.data = p.data.type(torch.cuda.DoubleTensor)
+                    if USE_CUDA:
+                        p.data = p.data.type(torch.cuda.DoubleTensor)
+                    else:
+                        p.data = p.data.type(torch.DoubleTensor)
                 layers.append(l)
         net = nn.Sequential(*layers)
 
-        noise = init.type(torch.cuda.DoubleTensor).clone()
-        target = feat.type(torch.cuda.DoubleTensor).detach()
+        if USE_CUDA:
+            noise = init.type(torch.cuda.DoubleTensor).clone()
+            target = feat.type(torch.cuda.DoubleTensor).detach()
+        else:
+            noise = init.type(torch.DoubleTensor).clone()
+            target = feat.type(torch.DoubleTensor).detach()
 
         noise_size = noise.size()
 
@@ -156,7 +164,12 @@ class VGG19:
         print('\tstate:'+stat)
         print('\tend_loss/init_loss: {:.2f}/{:.2f}'.format(end_loss, init_loss))
 
-        noise = noise.type(torch.cuda.FloatTensor)
+        if USE_CUDA:
+            noise = noise.type(torch.cuda.FloatTensor)
+        else:
+            noise = noise.type(torch.FloatTensor)
+
+
         noise = noise.view(noise_size).requires_grad_(False)
         out = self.forward_subnet(input_tensor=noise, start_layer=start_layer, end_layer=mid_layer)
 

@@ -113,12 +113,12 @@ if __name__ == '__main__':
 
 
     print("WLS 1")
-    filtered_AB = weightedLeastSquare(imgAP, imgA, alpha =ALPHA, _lambda = LAMBDA)
+    wls_AP_A = weightedLeastSquare(imgAP, imgA, alpha =ALPHA, _lambda = LAMBDA)
 
     print("WLS 2")
-    filtered_A = weightedLeastSquare(imgA, imgA, alpha =ALPHA, _lambda = LAMBDA)
+    wls_A_A = weightedLeastSquare(imgA, imgA, alpha =ALPHA, _lambda = LAMBDA)
 
-    refine_AB = imgA + filtered_AB - filtered_A
+    refine_AB = imgA + wls_AP_A - wls_A_A
 
     refine_AB = cv2.normalize(src=refine_AB, dst = refine_AB, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)
     refine_AB = np.asarray(refine_AB, dtype=np.uint8)
@@ -129,10 +129,10 @@ if __name__ == '__main__':
 
 
     ### Save Filtered_AB
-    filtered_AB = cv2.normalize(src=filtered_AB, dst=filtered_AB, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)
-    filtered_AB = np.asarray(filtered_AB, dtype=np.uint8)
-    cv2.imwrite("filtered_AB.png", filtered_AB)
+    wls_AP_A = cv2.normalize(src=wls_AP_A, dst=wls_AP_A, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)
+    wls_AP_A = np.asarray(wls_AP_A, dtype=np.uint8)
+    cv2.imwrite("wls_AP_A.png", wls_AP_A)
     ### Save Filtered A
-    filtered_A = cv2.normalize(src=filtered_A, dst=filtered_A, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)
-    filtered_A = np.asarray(filtered_A, dtype=np.uint8)
-    cv2.imwrite("filtered_A.png", filtered_A)
+    wls_A_A = cv2.normalize(src=wls_A_A, dst=wls_A_A, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)
+    wls_A_A = np.asarray(wls_A_A, dtype=np.uint8)
+    cv2.imwrite("wls_A_A.png", wls_A_A)
