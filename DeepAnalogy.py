@@ -15,6 +15,7 @@ def analogy(img_A, img_BP, config):
     weights = config['weights']
     sizes = config['sizes']
     rangee = config['rangee']
+    deconv_iters = config['deconv_iters']
     params = config['params']
     lr = config['lr']
 
@@ -66,13 +67,13 @@ def analogy(img_A, img_BP, config):
         print("- NNF search for ann_AB")
         start_time_2 = time.time()
         ann_AB, _ = pm.propagate(ann_AB, ts2np(Ndata_A), ts2np(Ndata_AP), ts2np(Ndata_B), ts2np(Ndata_BP), sizes[curr_layer],
-                              params['iter'], rangee[curr_layer])
+                              params['propagate_iter'], rangee[curr_layer])
         print("\tElapse: "+str(datetime.timedelta(seconds=time.time()- start_time_2))[:-7])
 
         print("- NNF search for ann_BA")
         start_time_2 = time.time()
         ann_BA, _ = pm.propagate(ann_BA, ts2np(Ndata_BP), ts2np(Ndata_B), ts2np(Ndata_AP), ts2np(Ndata_A), sizes[curr_layer],
-                              params['iter'], rangee[curr_layer])
+                              params['propagate_iter'], rangee[curr_layer])
         print("\tElapse: "+str(datetime.timedelta(seconds=time.time()- start_time_2))[:-7])        
 
         if curr_layer >= 4:
@@ -104,13 +105,13 @@ def analogy(img_A, img_BP, config):
         print('- deconvolution for feat A\'')
         start_time_2 = time.time()
         data_AP[curr_layer+1] = model.get_deconvoluted_feat(target_BP, curr_layer, data_AP[next_layer], lr=lr[curr_layer],
-                                                              iters=400, display=False)
+                                                              iters=deconv_iters, display=False)
         print("\tElapse: "+str(datetime.timedelta(seconds=time.time()- start_time_2))[:-7])        
 
         print('- deconvolution for feat B')
         start_time_2 = time.time()        
         data_B[curr_layer+1] = model.get_deconvoluted_feat(target_A, curr_layer, data_B[next_layer], lr=lr[curr_layer],
-                                                             iters=400, display=False)
+                                                             iters=deconv_iters, display=False)
         print("\tElapse: "+str(datetime.timedelta(seconds=time.time()- start_time_2))[:-7])                
 
         if USE_CUDA:

@@ -31,11 +31,11 @@ def main():
     params = {
         # default
         'layers': [29, 20, 11, 6, 1],
-        'iter': 10,
+        'propagate_iter': 10,
 
-        # # mod
-        # 'layers': [29],
-        # 'iter': 1,
+        # mod
+        # 'layers': [29, 20, 11, 6, 1],
+        # 'propagate_iter': 1,
     }
     config['params'] = params
 
@@ -49,6 +49,12 @@ def main():
     config['sizes'] = [3, 3, 3, 5, 5, 3]
     config['rangee'] = [32, 6, 6, 4, 4, 2]
     config['lr'] = [0.1, 0.005, 0.005, 0.00005]
+
+    # default
+    config['deconv_iters'] = 400
+    # mod
+    # config['deconv_iters'] = 1
+
 
     # make the required directories
     content = os.listdir('results')
