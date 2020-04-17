@@ -165,8 +165,8 @@ def analogy(img_A_L, img_BP_L, config):
     img_B_L = np.clip(img_B_L, 0, 255).astype("uint8")
     img_B_ab = np.clip(img_B_ab, 0, 255).astype("uint8")
 
-    img_AP_ab = np.dstack((np.zeros(shape=(img_AP_ab.shape[0],img_AP_ab.shape[1])), img_AP_ab))
-    img_B_ab = np.dstack((np.zeros(shape=(img_B_ab.shape[0], img_B_ab.shape[1])), img_B_ab))
+    img_AP_ab = np.dstack( (np.mean(img_AP_L, axis = 2), img_AP_ab) )
+    img_B_ab = np.dstack( (np.mean(img_B_L, axis = 2), img_B_ab) )
 
     return img_AP_L, img_AP_ab, img_B_L, img_B_ab, str(datetime.timedelta(seconds=time.time()- start_time_0))[:-7]
 

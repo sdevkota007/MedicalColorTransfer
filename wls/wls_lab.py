@@ -108,6 +108,8 @@ if __name__ == '__main__':
     imgAP_bgr = cv2.imread("img_B-ref-0028-src-0028.png")
 
     imgAP_lab = cv2.cvtColor(imgAP_bgr, cv2.COLOR_BGR2LAB)
+    cv2.imwrite("aa.png", imgAP_lab)
+
     imgAP_l, imgAP_a, imgAP_b = cv2.split(imgAP_lab)
 
     # if imgA.shape != imgAP.shape:
