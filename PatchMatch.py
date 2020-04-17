@@ -302,10 +302,14 @@ def clamp(arr, low, high):
 
 
 def reconstruct_avg(nnf, img, patch_size, A_size, B_size):
-    assert img.shape[0] == B_size[0] and img.shape[1] == B_size[1], "[{},{}], [{},{}]".format(img.shape[0],
-                                                                                              img.shape[1], B_size[0],
-                                                                                              B_size[1])
-    final = np.zeros(list(A_size) + [3, ])
+    assert img.shape[0] == B_size[0] and img.shape[1] == B_size[1], "[{},{}], [{},{}]".format(img.shape[0], img.shape[1], B_size[0], B_size[1])
+
+    if len(img.shape)==2:
+        final = np.zeros_like(A_size)
+    else:
+        n_ch = img.shape[2]
+        final = np.zeros(list(A_size) + [n_ch, ])
+
     # ratio = min(A_size[0]/nnf.shape[0], img.shape[1]/nnf.shape[1])
     # print("ratio:" + str(ratio))
 

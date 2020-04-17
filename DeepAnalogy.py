@@ -9,7 +9,28 @@ import datetime
 from config.settings import USE_CUDA
 
 
-def analogy(img_A, img_BP, config):
+def prepare_image(img_org):
+    lab = cv2.cvtColor(img_org, cv2.COLOR_BGR2LAB)
+    lab_scaled = lab.astype("float32")
+    L,a,b = cv2.split(lab_scaled)
+    L *= (100/255)
+    L -= 50
+
+    # cv2.dnn.blobFromImage is supposed to be equivalent to normalizing by
+    # mean = [0.485, 0.456, 0.406],
+    # std = [0.229, 0.224, 0.225].......... but double check that, maybe it is not needed at all in this situation
+    # L = cv2.dnn.blobFromImage(L)
+
+    img_A_L = np.stack((L,)*3, axis=-1)
+
+    img_A_ab = np.zeros(shape=[img_org.shape[0],img_org.shape[1], 2])
+    return img_A_L, img_A_ab
+
+
+def analogy(img_A_L, img_BP_L, config):
+    img_A_L, img_A_ab = prepare_image(img_A_L)
+    img_BP_L, img_BP_ab = prepare_image(img_BP_L)
+
     start_time_0 = time.time()
 
     weights = config['weights']
@@ -23,8 +44,8 @@ def analogy(img_A, img_BP, config):
 
 
     # preparing data
-    img_A_tensor = torch.FloatTensor(img_A.transpose(2, 0, 1))
-    img_BP_tensor = torch.FloatTensor(img_BP.transpose(2, 0, 1))
+    img_A_tensor = torch.FloatTensor(img_A_L.transpose(2, 0, 1))
+    img_BP_tensor = torch.FloatTensor(img_BP_L.transpose(2, 0, 1))
     img_A_tensor, img_BP_tensor = img_A_tensor.to(device), img_BP_tensor.to(device)
 
     img_A_tensor = img_A_tensor.unsqueeze(0)
@@ -129,14 +150,25 @@ def analogy(img_A, img_BP, config):
 
 
     print('\n- reconstruct images A\' and B')
-    img_AP = pm.reconstruct_avg(ann_AB, img_BP, sizes[curr_layer], data_A_size[curr_layer][2:], data_B_size[curr_layer][2:])
-    img_B = pm.reconstruct_avg(ann_BA, img_A, sizes[curr_layer], data_A_size[curr_layer][2:], data_B_size[curr_layer][2:])
-    
-    img_AP = np.clip(img_AP, 0, 255)
-    img_B = np.clip(img_B, 0, 255)    
+    img_BP_L += 50
+    img_BP_L *= (255/100)
+    img_AP_L = pm.reconstruct_avg(ann_AB, img_BP_L, sizes[curr_layer], data_A_size[curr_layer][2:], data_B_size[curr_layer][2:])
+    img_AP_ab = pm.reconstruct_avg(ann_AB, img_BP_ab, sizes[curr_layer], data_A_size[curr_layer][2:], data_B_size[curr_layer][2:])
 
+    img_A_L += 50
+    img_A_L *= (255/100)
+    img_B_L = pm.reconstruct_avg(ann_BA, img_A_L, sizes[curr_layer], data_A_size[curr_layer][2:], data_B_size[curr_layer][2:])
+    img_B_ab = pm.reconstruct_avg(ann_BA, img_A_ab, sizes[curr_layer], data_A_size[curr_layer][2:], data_B_size[curr_layer][2:])
 
-    return img_AP, img_B, str(datetime.timedelta(seconds=time.time()- start_time_0))[:-7]
+    img_AP_L = np.clip(img_AP_L, 0, 255).astype("uint8")
+    img_AP_ab = np.clip(img_AP_ab, 0, 255).astype("uint8")
+    img_B_L = np.clip(img_B_L, 0, 255).astype("uint8")
+    img_B_ab = np.clip(img_B_ab, 0, 255).astype("uint8")
+
+    img_AP_ab = np.dstack((np.zeros(shape=(img_AP_ab.shape[0],img_AP_ab.shape[1])), img_AP_ab))
+    img_B_ab = np.dstack((np.zeros(shape=(img_B_ab.shape[0], img_B_ab.shape[1])), img_B_ab))
+
+    return img_AP_L, img_AP_ab, img_B_L, img_B_ab, str(datetime.timedelta(seconds=time.time()- start_time_0))[:-7]
 
 
 

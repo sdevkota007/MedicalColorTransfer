@@ -83,22 +83,29 @@ def main():
 
         # load images
         print('Loading images...', end='')
-        img_A = load_image(img_A_path)
-        img_BP = load_image(img_BP_path)
+        img_A = cv2.imread(img_A_path)
+        img_BP = cv2.imread(img_BP_path)
         print('\rImages loaded successfully!')
 
         # Deep-Image-Analogy
         print("\n##### Deep Image Analogy - start #####")
-        img_AP, img_B, elapse = analogy(img_A, img_BP, config)
+        img_AP_L, img_AP_ab, img_B_L, img_B_ab, elapse = analogy(img_A, img_BP, config)
         print("##### Deep Image Analogy - end | Elapse:" + elapse + " #####")
 
-        img_AP_name = "img_AP-{0}-{1}.png".format(img_A_name.split(".")[0],
+        img_AP_L_name = "img_AP_L-{0}-{1}.png".format(img_A_name.split(".")[0],
                                                   img_BP_name.split(".")[0])
-        img_B_name = "img_B-{0}-{1}.png".format(img_A_name.split(".")[0],
+        img_AP_ab_name = "img_AP_ab-{0}-{1}.png".format(img_A_name.split(".")[0],
+                                                  img_BP_name.split(".")[0])
+
+        img_B_L_name = "img_B_L-{0}-{1}.png".format(img_A_name.split(".")[0],
+                                                img_BP_name.split(".")[0])
+        img_B_ab_name = "img_B_ab-{0}-{1}.png".format(img_A_name.split(".")[0],
                                                 img_BP_name.split(".")[0])
 
-        cv2.imwrite(os.path.join(save_path_AP, img_AP_name), img_AP)
-        cv2.imwrite(os.path.join(save_path_B, img_B_name), img_B)
+        cv2.imwrite(os.path.join(save_path_AP, img_AP_L_name), img_AP_L)
+        cv2.imwrite(os.path.join(save_path_AP, img_AP_ab_name), img_AP_ab)
+        cv2.imwrite(os.path.join(save_path_B, img_B_L_name), img_B_L)
+        cv2.imwrite(os.path.join(save_path_B, img_B_ab_name), img_B_ab)
 
         print('Image saved!')
 
