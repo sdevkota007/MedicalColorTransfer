@@ -9,7 +9,7 @@ import datetime
 from config.settings import USE_CUDA
 
 
-def prepare_image(img_org):
+def prepare_image2(img_org):
     lab = cv2.cvtColor(img_org, cv2.COLOR_BGR2LAB)
     lab_scaled = lab.astype("float32")
     L,a,b = cv2.split(lab_scaled)
@@ -27,9 +27,22 @@ def prepare_image(img_org):
     return img_A_L, img_A_ab
 
 
+def prepare_image(img_org):
+    lab = cv2.cvtColor(img_org, cv2.COLOR_BGR2LAB)
+    L,a,b = cv2.split(lab)
+
+    # cv2.dnn.blobFromImage is supposed to be equivalent to normalizing by
+    # mean = [0.485, 0.456, 0.406],
+    # std = [0.229, 0.224, 0.225].......... but double check that, maybe it is not needed at all in this situation
+    # L = cv2.dnn.blobFromImage(L)
+
+    L3 = np.stack((L,)*3, axis=-1)
+    return L3, lab
+
+
 def analogy(img_A_L, img_BP_L, config):
-    img_A_L, img_A_ab = prepare_image(img_A_L)
-    img_BP_L, img_BP_ab = prepare_image(img_BP_L)
+    img_A_L, img_A_Lab = prepare_image(img_A_L)
+    img_BP_L, img_BP_Lab = prepare_image(img_BP_L)
 
     start_time_0 = time.time()
 
@@ -150,25 +163,21 @@ def analogy(img_A_L, img_BP_L, config):
 
 
     print('\n- reconstruct images A\' and B')
-    img_BP_L += 50
-    img_BP_L *= (255/100)
-    img_AP_L = pm.reconstruct_avg(ann_AB, img_BP_L, sizes[curr_layer], data_A_size[curr_layer][2:], data_B_size[curr_layer][2:])
-    img_AP_ab = pm.reconstruct_avg(ann_AB, img_BP_ab, sizes[curr_layer], data_A_size[curr_layer][2:], data_B_size[curr_layer][2:])
+    img_AP_Lab = pm.reconstruct_avg(ann_AB, img_BP_Lab, sizes[curr_layer], data_A_size[curr_layer][2:], data_B_size[curr_layer][2:])
+    img_B_Lab = pm.reconstruct_avg(ann_BA, img_A_Lab, sizes[curr_layer], data_A_size[curr_layer][2:], data_B_size[curr_layer][2:])
 
-    img_A_L += 50
-    img_A_L *= (255/100)
-    img_B_L = pm.reconstruct_avg(ann_BA, img_A_L, sizes[curr_layer], data_A_size[curr_layer][2:], data_B_size[curr_layer][2:])
-    img_B_ab = pm.reconstruct_avg(ann_BA, img_A_ab, sizes[curr_layer], data_A_size[curr_layer][2:], data_B_size[curr_layer][2:])
+    img_AP_Lab = np.clip(img_AP_Lab, 0, 255).astype("uint8")
+    img_B_Lab = np.clip(img_B_Lab, 0, 255).astype("uint8")
 
-    img_AP_L = np.clip(img_AP_L, 0, 255).astype("uint8")
-    img_AP_ab = np.clip(img_AP_ab, 0, 255).astype("uint8")
-    img_B_L = np.clip(img_B_L, 0, 255).astype("uint8")
-    img_B_ab = np.clip(img_B_ab, 0, 255).astype("uint8")
+    img_AP_L = cv2.split(img_AP_Lab)[0]
+    img_B_L = cv2.split(img_B_Lab)[0]
 
-    img_AP_ab = np.dstack( (np.mean(img_AP_L, axis = 2), img_AP_ab) )
-    img_B_ab = np.dstack( (np.mean(img_B_L, axis = 2), img_B_ab) )
+    img_AP_bgr = cv2.cvtColor(img_AP_Lab, cv2.COLOR_LAB2BGR)
+    img_B_bgr = cv2.cvtColor(img_B_Lab, cv2.COLOR_LAB2BGR)
 
-    return img_AP_L, img_AP_ab, img_B_L, img_B_ab, str(datetime.timedelta(seconds=time.time()- start_time_0))[:-7]
+
+
+    return img_AP_L, img_AP_bgr, img_B_L, img_B_bgr, str(datetime.timedelta(seconds=time.time()- start_time_0))[:-7]
 
 
 

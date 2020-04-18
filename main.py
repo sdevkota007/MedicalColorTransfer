@@ -30,12 +30,12 @@ def main():
 
     params = {
         # default
-        'layers': [29, 20, 11, 6, 1],
-        'propagate_iter': 10,
+        # 'layers': [29, 20, 11, 6, 1],
+        # 'propagate_iter': 10,
 
         # mod
-        # 'layers': [29, 20, 11, 6, 1],
-        # 'propagate_iter': 1,
+        'layers': [29, 20, 11, 6, 1],
+        'propagate_iter': 20,
     }
     config['params'] = params
 
@@ -73,8 +73,8 @@ def main():
     images_A_path = "toy_dataset/radiological/mri"
     images_BP_path = "toy_dataset/head-no-bg"
 
-    target_images = os.listdir(images_A_path)
-    # target_images = ['src-0028.png']
+    # target_images = os.listdir(images_A_path)
+    target_images = ['src-0028.png']
 
     for img_A_name in target_images:
         img_A_path = os.path.join(images_A_path, img_A_name)
@@ -89,23 +89,23 @@ def main():
 
         # Deep-Image-Analogy
         print("\n##### Deep Image Analogy - start #####")
-        img_AP_L, img_AP_ab, img_B_L, img_B_ab, elapse = analogy(img_A, img_BP, config)
+        img_AP_L, img_AP_bgr, img_B_L, img_B_bgr, elapse = analogy(img_A, img_BP, config)
         print("##### Deep Image Analogy - end | Elapse:" + elapse + " #####")
 
         img_AP_L_name = "img_AP_L-{0}-{1}.png".format(img_A_name.split(".")[0],
                                                   img_BP_name.split(".")[0])
-        img_AP_ab_name = "img_AP_ab-{0}-{1}.png".format(img_A_name.split(".")[0],
+        img_AP_bgr_name = "img_AP_bgr-{0}-{1}.png".format(img_A_name.split(".")[0],
                                                   img_BP_name.split(".")[0])
 
         img_B_L_name = "img_B_L-{0}-{1}.png".format(img_A_name.split(".")[0],
                                                 img_BP_name.split(".")[0])
-        img_B_ab_name = "img_B_ab-{0}-{1}.png".format(img_A_name.split(".")[0],
+        img_B_bgr_name = "img_B_bgr-{0}-{1}.png".format(img_A_name.split(".")[0],
                                                 img_BP_name.split(".")[0])
 
         cv2.imwrite(os.path.join(save_path_AP, img_AP_L_name), img_AP_L)
-        cv2.imwrite(os.path.join(save_path_AP, img_AP_ab_name), img_AP_ab)
+        cv2.imwrite(os.path.join(save_path_AP, img_AP_bgr_name), img_AP_bgr)
         cv2.imwrite(os.path.join(save_path_B, img_B_L_name), img_B_L)
-        cv2.imwrite(os.path.join(save_path_B, img_B_ab_name), img_B_ab)
+        cv2.imwrite(os.path.join(save_path_B, img_B_bgr_name), img_B_bgr)
 
         print('Image saved!')
 
