@@ -76,6 +76,9 @@ def main():
     # target_images = os.listdir(images_A_path)
     target_images = ['src-0028.png']
 
+    dumpConfig(config, save_path)
+    print("Config dumped")
+
     for img_A_name in target_images:
         img_A_path = os.path.join(images_A_path, img_A_name)
         img_BP_name = "ref-" + img_A_name.split("-")[1]
@@ -108,10 +111,6 @@ def main():
         cv2.imwrite(os.path.join(save_path_B, img_B_bgr_name), img_B_bgr)
 
         print('Image saved!')
-
-
-    dumpConfig(config, save_path)
-    print("Config dumped")
 
 
 if __name__=="__main__":
