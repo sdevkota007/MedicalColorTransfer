@@ -169,19 +169,10 @@ def analogy(img_A_L, img_BP_L, config):
     img_AP_Lab = np.clip(img_AP_Lab, 0, 255).astype("uint8")
     img_B_Lab = np.clip(img_B_Lab, 0, 255).astype("uint8")
 
-    img_AP_L = cv2.split(img_AP_Lab)[0]
-    img_B_L = cv2.split(img_B_Lab)[0]
+    # img_AP_L = cv2.split(img_AP_Lab)[0]
+    # img_B_L = cv2.split(img_B_Lab)[0]
 
     img_AP_bgr = cv2.cvtColor(img_AP_Lab, cv2.COLOR_LAB2BGR)
     img_B_bgr = cv2.cvtColor(img_B_Lab, cv2.COLOR_LAB2BGR)
 
-
-
-    return img_AP_L, img_AP_bgr, img_B_L, img_B_bgr, str(datetime.timedelta(seconds=time.time()- start_time_0))[:-7]
-
-
-
-
-
-
-
+    return img_AP_bgr, img_B_bgr, str(datetime.timedelta(seconds=time.time()- start_time_0))[:-7]
