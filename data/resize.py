@@ -6,7 +6,7 @@ parser = argparse.ArgumentParser()
 
 # parser.add_argument('--resize_ratio', type=float, default=0.5)
 # parser.add_argument('--weight', type=int, default=2, choices=[2, 3])
-parser.add_argument('--img', type=str, default='data/7/content1.png')
+parser.add_argument('--img_mri', type=str, default='data/7/content1.png')
 
 
 args = parser.parse_args()

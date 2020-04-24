@@ -26,16 +26,18 @@
 import cv2
 import os
 import numpy as np
-import wls_lab
+import wls_lab_gamma
 
 
-# values used in Deep Image Analogy paper
-# LAMBDA = 0.8
-# ALPHA = 1.0
+# # values used in Deep Image Analogy paper
+LAMBDA = 0.8
+ALPHA = 1.0
 
-LAMBDA = 1.0
-ALPHA = 1.2
+# mod
+# LAMBDA = 1.0
+# ALPHA = 1.2
 
+GAMMA = 2.0
 
 def processAllImages(imgAP_path, imgA_path, img_wlsOut_path):
     count = 0
@@ -47,6 +49,10 @@ def processAllImages(imgAP_path, imgA_path, img_wlsOut_path):
         imgA_gray = cv2.imread(imgA_file, cv2.IMREAD_GRAYSCALE)
         imgAP_bgr = cv2.imread(imgAP_file)
 
+        # perform inverse gamma operation
+        imgA_gray = wls_lab_gamma.gamma_corr(imgA_gray, gamma=1 / GAMMA)
+        imgAP_bgr = wls_lab_gamma.gamma_corr(imgAP_bgr, gamma=1 / GAMMA)
+
         imgAP_lab = cv2.cvtColor(imgAP_bgr, cv2.COLOR_BGR2LAB)
         imgAP_l = imgAP_lab[:, :, 0]
         imgAP_a = imgAP_lab[:, :, 1]
@@ -54,17 +60,17 @@ def processAllImages(imgAP_path, imgA_path, img_wlsOut_path):
 
         imgA_gray = np.asarray(imgA_gray, dtype=np.float32)
         imgA_gray = imgA_gray / 255
-        imgA_gray = wls_lab.replaceZeroes(imgA_gray)
+        imgA_gray = wls_lab_gamma.replaceZeroes(imgA_gray)
 
         imgAP_l = np.asarray(imgAP_l, dtype=np.float32)
         imgAP_l = imgAP_l / 255
-        imgAP_l = wls_lab.replaceZeroes(imgAP_l)
+        imgAP_l = wls_lab_gamma.replaceZeroes(imgAP_l)
 
         print("WLS 1")
-        wls_AP_A = wls_lab.weightedLeastSquare(imgAP_l, imgA_gray, _lambda=LAMBDA, alpha=ALPHA)
+        wls_AP_A = wls_lab_gamma.weightedLeastSquare(imgAP_l, imgA_gray, _lambda=LAMBDA, alpha=ALPHA)
         #
         print("WLS 2")
-        wls_A_A = wls_lab.weightedLeastSquare(imgA_gray, imgA_gray, _lambda=LAMBDA, alpha=ALPHA)
+        wls_A_A = wls_lab_gamma.weightedLeastSquare(imgA_gray, imgA_gray, _lambda=LAMBDA, alpha=ALPHA)
 
         imgOut_lP = imgA_gray + wls_AP_A - wls_A_A
 
@@ -77,6 +83,8 @@ def processAllImages(imgAP_path, imgA_path, img_wlsOut_path):
         imgOut_lP_a_b[:, :, 2] = imgAP_b
 
         imgOut_lP_a_b = cv2.cvtColor(imgOut_lP_a_b, cv2.COLOR_LAB2BGR)
+
+        imgOut_lP_a_b = wls_lab_gamma.gamma_corr(imgOut_lP_a_b, gamma=GAMMA)
 
         img_wlsOut_name = "wlsout-" + imgAP_name.split("-")[-1]
         img_wlsOut_file = os.path.join(img_wlsOut_path, img_wlsOut_name)
@@ -97,5 +105,5 @@ def processAllImages(imgAP_path, imgA_path, img_wlsOut_path):
 if __name__ == '__main__':
     imgAP_path = "../results/expr_5/AP"
     imgA_path = "../toy_dataset/radiological/mri"
-    wls_out_path = "../results/expr_5/wls-lab_out"
+    wls_out_path = "../results/expr_5/wls-lab-gamma_out"
     processAllImages(imgAP_path, imgA_path, wls_out_path)

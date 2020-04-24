@@ -38,7 +38,7 @@ print(torch.max(features), torch.min(features))
 
 
 # ************************************OPTION 1************************************
-# img_tensor = torch.FloatTensor(img.transpose(2, 0, 1))
+# img_tensor = torch.FloatTensor(img_mri.transpose(2, 0, 1))
 # img_tensor = img_tensor.to(device)
 #
 # img_tensor = img_tensor.unsqueeze(0)

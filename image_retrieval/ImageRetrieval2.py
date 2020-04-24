@@ -108,7 +108,7 @@ for i, item in enumerate(top_3):
     img = cv2.imread(img_path)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-    # cv2.imshow("{0}-choice-{1}".format(img_name, i+1), img)
+    # cv2.imshow("{0}-choice-{1}".format(img_name, i+1), img_mri)
 
     fig.add_subplot(rows, columns, i+2)
     plt.imshow(img)

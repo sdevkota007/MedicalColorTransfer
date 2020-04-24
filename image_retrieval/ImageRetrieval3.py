@@ -116,12 +116,12 @@ class Img2Vec():
 
 
 # mri_img = "/home/ninja/PycharmProjects/MedicalColorTransfer/toy_dataset/radiological/mri/src-0027.png"
-# img = Image.open(mri_img)
-# img = img.convert('RGB')
-# print(img.mode)
+# img_mri = Image.open(mri_img)
+# img_mri = img_mri.convert('RGB')
+# print(img_mri.mode)
 #
 # imgToVec = Img2Vec(cuda=False)
-# vec = imgToVec.get_vec(img)
+# vec = imgToVec.get_vec(img_mri)
 # print(vec)
 
 

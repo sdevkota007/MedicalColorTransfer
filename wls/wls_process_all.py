@@ -80,7 +80,9 @@ def processAllImages(img_color_path, img_guide_path, img_wlsOut_path):
 
 
 if __name__ == '__main__':
-    img_color_path = "../results/toy_expr/img_B"
-    img_guide_path = "../toy_dataset/radiological/mri"
-    wls_out_path = "../results/toy_expr/wls_out"
-    processAllImages(img_color_path, img_guide_path, wls_out_path)
+    imgAP_path = "../results/expr_5/AP"
+    imgA_path = "../toy_dataset/radiological/mri"
+    wls_out_path = "../results/expr_5/wls_out"
+    processAllImages(img_color_path=imgAP_path,
+                     img_guide_path=imgA_path,
+                     img_wlsOut_path=wls_out_path)

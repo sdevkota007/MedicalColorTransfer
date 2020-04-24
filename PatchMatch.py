@@ -310,7 +310,7 @@ def reconstruct_avg(nnf, img, patch_size, A_size, B_size):
         n_ch = img.shape[2]
         final = np.zeros(list(A_size) + [n_ch, ])
 
-    # ratio = min(A_size[0]/nnf.shape[0], img.shape[1]/nnf.shape[1])
+    # ratio = min(A_size[0]/nnf.shape[0], img_mri.shape[1]/nnf.shape[1])
     # print("ratio:" + str(ratio))
 
     ah, aw = A_size

@@ -55,7 +55,7 @@ def plotLambdaVsAlpha(imgA, imgAP, gammas, out_path):
         imgAP_bgr = imgAP
 
         #perform inverse gamma operation
-        # imgA_gray = wls_lab_gamma.gamma_corr(imgA_gray, gamma=1/GAMMA)
+        imgA_gray = wls_lab_gamma.gamma_corr(imgA_gray, gamma=1/GAMMA)
         imgAP_bgr = wls_lab_gamma.gamma_corr(imgAP_bgr, gamma=1/GAMMA)
 
 
