@@ -89,10 +89,10 @@ def main():
     images_BP_path = "toy_dataset/head-no-bg"
 
     # for all images
-    # target_images = os.listdir(images_A_path)
+    target_images = os.listdir(images_A_path)
 
     # mod - testing
-    target_images = ['src-0028.png']
+    # target_images = ['src-0028.png']
 
     dumpConfig(config, save_path)
     print("Config dumped")
