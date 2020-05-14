@@ -1,4 +1,4 @@
-from VGG19 import VGG19
+from VGG19 import VGG19, VGG19Gray
 import PatchMatch as pm
 import torch
 import numpy as np
@@ -52,6 +52,7 @@ def analogy(img_A_L, img_BP_L, config):
     deconv_iters = config['deconv_iters']
     params = config['params']
     lr = config['lr']
+    model_name = config['model']
 
     device = torch.device("cuda" if USE_CUDA else "cpu")
 
@@ -65,7 +66,11 @@ def analogy(img_A_L, img_BP_L, config):
     img_BP_tensor = img_BP_tensor.unsqueeze(0)
 
     # compute 5 feature maps
-    model = VGG19(device=device)
+    if model_name == "VGG19":
+        model = VGG19(device=device)
+    elif model_name == "VGG19Gray":
+        model = VGG19Gray(device=device)
+
     data_A, data_A_size = model.get_features(img_tensor=img_A_tensor.clone(), layers=params['layers'])
     data_AP = copy.deepcopy(data_A)
     data_BP, data_B_size = model.get_features(img_tensor=img_BP_tensor.clone(), layers=params['layers'])

@@ -144,3 +144,7 @@ toy_dataset/
 wls/Gammas_lab/
 wls/LambdaVsAlpha/
 wls/LambdaVsAlpha_lab/
+
+
+*.caffemodel
+*.pth

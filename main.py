@@ -20,6 +20,7 @@ def dumpConfig(content, path):
 def main():
     # default
     WEIGHT_CHOICE = 2
+    MODEL_CHOICE = 2
 
     # higher weight choice for photo to photo transfer
     # didnt work out that well
@@ -28,17 +29,6 @@ def main():
     # setting parameters
     config = dict()
 
-    params = {
-        # default
-        # 'layers': [29, 20, 11, 6, 1],
-        # 'propagate_iter': 10,
-
-        # mod
-        'layers': [29, 20, 11, 6, 1],
-        'propagate_iter': 20,
-    }
-    config['params'] = params
-
     if WEIGHT_CHOICE == 2:
         config['weights'] = [1.0, 0.8, 0.7, 0.6, 0.1, 0.0]
     elif WEIGHT_CHOICE == 3:
@@ -46,13 +36,38 @@ def main():
     elif WEIGHT_CHOICE == 4:
         config['weights'] = [3.0, 3.0, 3.0, 3.0, 3.0, 3.0]
 
+    # depending upon the choice of model, select layers:
+    # relu_5_1, relu_4_1, relu_3_1, relu_3_1, and relu_1_1
+    if MODEL_CHOICE ==1:
+        config['model'] = "VGG19"
+        layers = [29, 20, 11, 6, 1]
+    elif MODEL_CHOICE ==2:
+        config['model'] = "VGG19Gray"
+        layers = [47, 30, 17, 10, 3]
+
+    params = {
+        'layers': layers,
+
+        # default
+        # 'propagate_iter': 10,
+
+        # test
+        # 'propagate_iter': 1,
+
+        # mod - better results
+        'propagate_iter': 20,
+    }
+    config['params'] = params
+
     config['sizes'] = [3, 3, 3, 5, 5, 3]
     config['rangee'] = [32, 6, 6, 4, 4, 2]
     config['lr'] = [0.1, 0.005, 0.005, 0.00005]
 
+
     # default
     config['deconv_iters'] = 400
-    # mod
+
+    # mod - testing
     # config['deconv_iters'] = 1
 
 
@@ -73,8 +88,11 @@ def main():
     images_A_path = "toy_dataset/radiological/mri"
     images_BP_path = "toy_dataset/head-no-bg"
 
-    target_images = os.listdir(images_A_path)
-    # target_images = ['src-0028.png']
+    # for all images
+    # target_images = os.listdir(images_A_path)
+
+    # mod - testing
+    target_images = ['src-0028.png']
 
     dumpConfig(config, save_path)
     print("Config dumped")
@@ -108,62 +126,3 @@ def main():
 
 if __name__=="__main__":
     main()
-
-
-
-# if __name__ == "__main__":
-    # parser = argparse.ArgumentParser()
-    #
-    # # parser.add_argument('--resize_ratio', type=float, default=0.5)
-    # parser.add_argument('--resize_ratio', type=float, default=1)
-    # parser.add_argument('--weight', type=int, default=2, choices=[2,3])
-    # parser.add_argument('--img_A_path', type=str, default='data/8/content1-r.png')
-    # parser.add_argument('--img_BP_path', type=str, default='data/8/style2-r.png')
-    # parser.add_argument('--use_cuda', type=str2bool, default=True)
-    #
-    # args = parser.parse_args()
-    #
-    #
-    # # load images
-    # print('Loading images...', end='')
-    # img_A = load_image(args.img_A_path, args.resize_ratio)
-    # img_BP = load_image(args.img_BP_path, args.resize_ratio)
-    # print('\rImages loaded successfully!')
-    #
-    #
-    # # setting parameters
-    # config = dict()
-    #
-    # params = {
-    #     'layers': [29,20,11,6,1],
-    #     'iter': 10,
-    # }
-    # config['params'] = params
-    #
-    # if args.weight == 2:
-    #     config['weights'] = [1.0, 0.8, 0.7, 0.6, 0.1, 0.0]
-    # elif args.weight == 3:
-    #     config['weights'] = [1.0, 0.9, 0.8, 0.7, 0.2, 0.0]
-    # config['sizes'] = [3,3,3,5,5,3]
-    # config['rangee'] = [32,6,6,4,4,2]
-    #
-    # config['use_cuda'] = args.use_cuda
-    # config['lr'] = [0.1, 0.005, 0.005, 0.00005]
-    #
-    # # Deep-Image-Analogy
-    # print("\n##### Deep Image Analogy - start #####")
-    # img_AP, img_B, elapse = analogy(img_A, img_BP, config)
-    # print("##### Deep Image Analogy - end | Elapse:"+elapse+" #####")
-    #
-    # # save result
-    # content = os.listdir('results')
-    # count = 1
-    # for c in content:
-    #     if os.path.isdir('results/'+c):
-    #         count += 1
-    # save_path = 'results/expr_{}'.format(count)
-    # os.mkdir(save_path)
-    #
-    # cv2.imwrite(save_path+'/img_AP.png', img_AP)
-    # cv2.imwrite(save_path+'/img_B.png', img_B)
-    # print('Image saved!')

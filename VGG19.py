@@ -11,6 +11,8 @@ import torch.utils.model_zoo as model_zoo
 from lbfgs import lbfgs
 import copy
 from config.settings import USE_CUDA
+import numpy as np
+from models.vgg19_gray.vgg19_gray import VGGGray
 
 
 class FeatureExtractor(nn.Sequential):
@@ -28,26 +30,16 @@ class FeatureExtractor(nn.Sequential):
         return list
 
 
+
 class VGG19:
     def __init__(self, device):
 
         self.device = device
 
-        url = "https://s3-us-west-2.amazonaws.com/jcjohns-models/vgg19-d01eb7cb.pth"
-        #original
-        #vgg19_model = models.vgg19(pretrained=False)
-        #mod
+        # url = "https://s3-us-west-2.amazonaws.com/jcjohns-models/vgg19-d01eb7cb.pth"
         vgg19_model = models.vgg19(pretrained=True, progress=True)
-        ###
 
-        #Original
-        #vgg19_model.load_state_dict(model_zoo.load_url(url), strict=False)
-        ###
-        #mod
-        # state_dict = torch.hub.load_state_dict_from_url(url)
-        # vgg19_model.load_state_dict(state_dict)
-        ###
-
+        # vgg19_model = models.vgg19_bn(pretrained=True, progress=True)
 
         self.cnn_temp = vgg19_model.features
         self.model = FeatureExtractor()  # the new Feature extractor module network
@@ -142,6 +134,7 @@ class VGG19:
         # ================
         def go(x):
             x = x.view(noise_size)
+            # print(x)
             output = net(x)
             se = torch.sum((output - target) ** 2)
             return se
@@ -177,3 +170,162 @@ class VGG19:
 
 
 
+
+class VGG19Gray:
+    def __init__(self, device):
+
+        self.device = device
+
+        weights_file = "./models/vgg19_gray/vgg19_gray.pth"
+        self.vgg = VGGGray()
+
+        self.vgg.load_state_dict(torch.load(weights_file))
+
+        self.model = FeatureExtractor()  # the new Feature extractor module network
+        conv_counter = 1
+        relu_counter = 1
+        batn_counter = 1
+
+        block_counter = 1
+
+        for i, (name, layer) in enumerate(self.vgg._modules.items()):
+
+
+            if isinstance(layer, nn.Conv2d):
+                name = "conv_" + str(block_counter) + "_" + str(conv_counter) + "__" + str(i)
+                conv_counter += 1
+                self.model.add_layer(name, layer)
+
+            if isinstance(layer, nn.ReLU):
+                name = "relu_" + str(block_counter) + "_" + str(relu_counter) + "__" + str(i)
+                relu_counter += 1
+                self.model.add_layer(name, nn.ReLU(inplace=False))
+
+            if isinstance(layer, nn.MaxPool2d):
+                name = "pool_" + str(block_counter) + "__" + str(i)
+                batn_counter = relu_counter = conv_counter = 1
+                block_counter += 1
+                self.model.add_layer(name, nn.MaxPool2d((2, 2), ceil_mode=True))  # ***
+
+            if isinstance(layer, nn.BatchNorm2d):
+                name = "batn_" + str(block_counter) + "_" + str(batn_counter) + "__" + str(i)
+                batn_counter += 1
+                self.model.add_layer(name, layer)  # ***
+
+        self.model.to(device)
+
+        # self.mean_ = (103.939, 116.779, 123.68)
+
+    def forward_subnet(self, input_tensor, start_layer, end_layer):
+        for i, layer in enumerate(list(self.model)):
+            if i >= start_layer and i <= end_layer:
+                input_tensor = layer(input_tensor)
+        return input_tensor
+
+    def get_features(self, img_tensor, layers):
+        img_tensor = img_tensor.to(self.device)
+
+        # assert torch.max(img_tensor)<=1.0 and torch.min(img_tensor)>=0.0, 'inccorect range of tensor'
+        # for chn in range(3):
+        #     img_tensor[:, chn, :, :] -= self.mean_[chn]
+
+        features_raw = self.model(img_tensor)
+        features = []
+        for i, f in enumerate(features_raw):
+            if (i) in layers:
+                features.append(f.detach())
+        features.reverse()
+        features.append(img_tensor.detach())
+
+        sizes = [f.size() for f in features]
+        return features, sizes
+
+    def get_deconvoluted_feat(self, feat, curr_layer, init=None, lr=10, iters=13, display=False):
+
+        blob_layers = [47, 30, 17, 10, 3, -1]
+        end_layer = blob_layers[curr_layer]
+        mid_layer = blob_layers[curr_layer + 1]
+        start_layer = blob_layers[curr_layer + 2] + 1
+        if display:
+            print(start_layer, mid_layer, end_layer)
+
+        layers = []
+        for i, layer in enumerate(list(self.model)):
+            if i >= start_layer and i <= end_layer:
+                if display:
+                    print(layer)
+                l = copy.deepcopy(layer)
+                for p in l.parameters():
+                    if USE_CUDA:
+                        p.data = p.data.type(torch.cuda.DoubleTensor)
+                    else:
+                        p.data = p.data.type(torch.DoubleTensor)
+                layers.append(l)
+        net = nn.Sequential(*layers)
+        net.double()
+
+        if USE_CUDA:
+            noise = init.type(torch.cuda.DoubleTensor).clone()
+            target = feat.type(torch.cuda.DoubleTensor).detach()
+        else:
+            noise = init.type(torch.DoubleTensor).clone()
+            target = feat.type(torch.DoubleTensor).detach()
+
+        noise_size = noise.size()
+
+        # ================
+        def go(x):
+            x = x.view(noise_size)
+            # print(x)
+            output = net(x)
+            se = torch.sum((output - target) ** 2)
+            return se
+
+        def f(x):
+            x = x.clone().requires_grad_(True)
+            loss = go(x)
+            loss.backward()
+            grad = x.grad.view(-1)
+            return loss.item(), grad
+
+        # ================
+        init_loss = go(noise).item()
+        noise = noise.view(-1)
+        for idx in range(1000):
+            noise, stat = lbfgs(f, noise, maxIter=iters, gEps=1e-4, histSize=4, lr=lr, display=display)
+            if stat in ["LBFGS REACH MAX ITER", "LBFGS BELOW GRADIENT EPS"]:
+                break
+        end_loss = go(noise).item()
+        print('\tstate:'+stat)
+        print('\tend_loss/init_loss: {:.2f}/{:.2f}'.format(end_loss, init_loss))
+
+        if USE_CUDA:
+            noise = noise.type(torch.cuda.FloatTensor)
+        else:
+            noise = noise.type(torch.FloatTensor)
+
+
+        noise = noise.view(noise_size).requires_grad_(False)
+        out = self.forward_subnet(input_tensor=noise, start_layer=start_layer, end_layer=mid_layer)
+
+        return out.detach()
+
+
+
+if __name__ == '__main__':
+    def load_image(imgfile):
+        image = cv2.imread(imgfile)
+        img_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        img_scaled = cv2.resize(img_rgb, dsize=(224, 224), interpolation=cv2.INTER_LINEAR)
+
+        img = np.transpose(img_scaled, (2, 0, 1))
+        data = np.expand_dims(img, 0).copy()
+        data = np.asarray(data, np.float) / 255.0
+        return data
+
+
+    imgfile = '/home/ninja/PycharmProjects/MedicalColorTransfer/models/cat.jpg'
+    img = load_image(imgfile)
+    device = torch.device("cuda" if USE_CUDA else "cpu")
+
+    model = VGG19Gray(device=device)
