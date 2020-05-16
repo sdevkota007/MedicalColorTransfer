@@ -85,8 +85,10 @@ def main():
     os.makedirs(save_path_AP)
     os.makedirs(save_path_B)
 
-    images_A_path = "toy_dataset/radiological/mri"
-    images_BP_path = "toy_dataset/head-no-bg"
+    # radiological images
+    images_A_path = "toy_dataset/radiological/ctscans/1-denoised"
+    # frozen cross section images
+    images_BP_path = "toy_dataset/thorax-abdomen-fixed/1-denoised"
 
     # for all images
     target_images = os.listdir(images_A_path)
