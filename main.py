@@ -106,8 +106,8 @@ def main():
 
         # load images
         print('Loading images...', end='')
-        img_A = cv2.imread(img_A_path)
-        img_BP = cv2.imread(img_BP_path)
+        img_A = load_image(img_A_path, dsize=(256, 256))
+        img_BP = load_image(img_BP_path, dsize=(256,256))
         print('\rImages loaded successfully!')
 
         # Deep-Image-Analogy
